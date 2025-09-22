@@ -17,4 +17,7 @@ public class DataContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
         => options.UseSqlite($"Data Source={DbPath}");
+
+    public DbSet<Product> Products { get; set; }
+
 }
