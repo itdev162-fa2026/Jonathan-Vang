@@ -1,6 +1,5 @@
-using Domain;
+// File: API/Controllers/WeatherForecastController.cs
 using Microsoft.AspNetCore.Mvc;
-using Persistence;
 
 namespace API.Controllers;
 
@@ -8,33 +7,35 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class WeatherForecastController : ControllerBase
 {
-    private readonly DataContext _context;
-
-    public WeatherForecastController(DataContext context)
+    private static readonly string[] Summaries = new[]
     {
-        _context = context;
-    }
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild",
+        "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
 
-    // GET /weatherforecast
     [HttpGet]
     public IEnumerable<WeatherForecast> Get()
-        => _context.WeatherForecasts
-                   .OrderBy(w => w.Id)
-                   .ToList();
-
-    // POST /weatherforecast
-    // (hard-coded add for now; we’ll test with Postman later)
-    [HttpPost]
-    public async Task<IActionResult> Create()
     {
-        var wf = new WeatherForecast
+        var rng = new Random();
+        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
-            Date = DateOnly.FromDateTime(DateTime.Now),
-            TemperatureC = 25,
-            Summary = "EF saved!"
-        };
-        _context.WeatherForecasts.Add(wf);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(Get), new { id = wf.Id }, wf);
+            Id = index,
+            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            TemperatureC = rng.Next(-20, 55),
+            Summary = Summaries[rng.Next(Summaries.Length)]
+        })
+        .ToArray();
     }
+}
+
+// File: Domain/WeatherForecast.cs  (leave as-is or use this)
+public class WeatherForecast
+{
+    public int Id { get; set; }
+    public DateOnly Date { get; set; }
+    public int TemperatureC { get; set; }
+    public string? Summary { get; set; }
+
+    // computed helper
+    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
