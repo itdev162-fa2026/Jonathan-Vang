@@ -29,6 +29,11 @@ public class ProductsController : ControllerBase
     [HttpGet("{id}")]
     public ActionResult<Product> GetProduct(int id)
     {
+
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+
         var product = _context.Products.Find(id);
         if (product == null) return NotFound();
         return Ok(product);
@@ -54,6 +59,11 @@ public class ProductsController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult<Product> UpdateProduct(int id, Product product)
     {
+
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+
         var existing = _context.Products.Find(id);
         if (existing == null) return NotFound();
 
@@ -83,4 +93,56 @@ public class ProductsController : ControllerBase
         if (saved) return NoContent();
         return BadRequest("Failed to delete product");
     }
+
+
+    [HttpGet("search")]
+public ActionResult<IEnumerable<Product>> SearchProducts(
+    [FromQuery] string? name = null,
+    [FromQuery] decimal? minPrice = null,
+    [FromQuery] decimal? maxPrice = null,
+    [FromQuery] bool? isOnSale = null,
+    [FromQuery] bool? inStock = null,
+    [FromQuery] string sortBy = "name",
+    [FromQuery] string sortOrder = "asc")
+{
+    var query = _context.Products.AsQueryable();
+
+    // filters
+    if (!string.IsNullOrEmpty(name))
+        query = query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
+
+    if (minPrice.HasValue)
+        query = query.Where(p => p.Price >= minPrice.Value);
+
+    if (maxPrice.HasValue)
+        query = query.Where(p => p.Price <= maxPrice.Value);
+
+    if (isOnSale.HasValue)
+        query = query.Where(p => p.IsOnSale == isOnSale.Value);
+
+    if (inStock.HasValue && inStock.Value)
+        query = query.Where(p => p.CurrentStock > 0);
+
+    // run the query, then sort in memory (works fine with SQLite)
+    var products = query.ToList();
+
+    products = sortBy.ToLower() switch
+    {
+        "price" => sortOrder.ToLower() == "desc"
+            ? products.OrderByDescending(p => p.Price).ToList()
+            : products.OrderBy(p => p.Price).ToList(),
+        "created" => sortOrder.ToLower() == "desc"
+            ? products.OrderByDescending(p => p.CreatedDate).ToList()
+            : products.OrderBy(p => p.CreatedDate).ToList(),
+        "stock" => sortOrder.ToLower() == "desc"
+            ? products.OrderByDescending(p => p.CurrentStock).ToList()
+            : products.OrderBy(p => p.CurrentStock).ToList(),
+        _ => sortOrder.ToLower() == "desc"
+            ? products.OrderByDescending(p => p.Name).ToList()
+            : products.OrderBy(p => p.Name).ToList()
+    };
+
+    return Ok(products);
+}
+
 }

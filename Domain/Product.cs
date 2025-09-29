@@ -1,5 +1,11 @@
 namespace Domain;
 
+
+using System.ComponentModel.DataAnnotations;
+using Domain.Validation;
+
+[ValidSalePrice]
+
 public class Product
 {
     public int Id { get; set; }              // auto PK
