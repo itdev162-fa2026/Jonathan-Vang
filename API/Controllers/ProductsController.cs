@@ -29,8 +29,10 @@ public class ProductsController : ControllerBase
     [HttpGet("{id}")]
     public ActionResult<Product> GetProduct(int id)
     {
+
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
+
 
         var product = _context.Products.Find(id);
         if (product == null) return NotFound();
@@ -57,8 +59,10 @@ public class ProductsController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult<Product> UpdateProduct(int id, Product product)
     {
+
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
+
 
         var existing = _context.Products.Find(id);
         if (existing == null) return NotFound();
@@ -89,6 +93,7 @@ public class ProductsController : ControllerBase
         if (saved) return NoContent();
         return BadRequest("Failed to delete product");
     }
+
 
     [HttpGet("search")]
 public ActionResult<IEnumerable<Product>> SearchProducts(
@@ -139,4 +144,5 @@ public ActionResult<IEnumerable<Product>> SearchProducts(
 
     return Ok(products);
 }
+
 }
